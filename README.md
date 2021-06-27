@@ -15,6 +15,7 @@ I was having a hard time generating category n Venn Diagrams in my SVG editor.
 * Press the up or down arrow keys to increase or decrease the number of circles in the Venn Diagram
 * For faster input, press enter to type a number of circles.
 * Press the left or right arrow keys to increase or decrease the spacing between the circles.
+* Press p or P to save as SVG. You can paste it into a program like Figma to clean it up.
 
 ### Warning
 
@@ -48,7 +49,4 @@ I used IntelliJ and Glitch.com to build this.
 
 # Future Work
 
-* Spectating Mode
-* Private rooms
-* Link sharing
-* Record games
+* Better performance on create diagram

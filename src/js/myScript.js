@@ -1,4 +1,5 @@
 import {generateCircleData, generateVennDiagramPaths} from "./path.utils.js";
+import {downloadAsSVG} from "./dom.utils.js";
 
 
 function showPointer(show) {
@@ -25,6 +26,7 @@ function onMouseLeave(event) {
 function drawInteractiveVennDiagram(howMany, size, spacing) {
   const start = new Date();
 
+
   const circleData = generateCircleData(howMany, size, spacing);
   const circles = circleData.map(data => {
     return new Path.Circle({
@@ -40,17 +42,22 @@ function drawInteractiveVennDiagram(howMany, size, spacing) {
   });
 
   const vennDiagramPaths = generateVennDiagramPaths(circles, circleData.map(d => d.color), howMany);
+  let group = new Group(vennDiagramPaths);
   vennDiagramPaths.forEach(v => {
     if (v) {
       v.onMouseEnter = onMouseEnter;
       v.onMouseLeave = onMouseLeave;
-      project.activeLayer.insertChild(0, v);
     }
   });
+  project.activeLayer.insertChild(0, group);
+
 
   return {
-    secondsElapsed: ((new Date()).getTime() - start.getTime()) / 1000,
-    objects: vennDiagramPaths.length
+    group: group,
+    stats: {
+      secondsElapsed: ((new Date()).getTime() - start.getTime()) / 1000,
+      objects: vennDiagramPaths.length
+    }
   };
 }
 
@@ -67,7 +74,15 @@ function drawMenu(howMany, spacing) {
     content: `Spacing: ${spacing}\n(press ← or → keys)`,
     point: {
       x: 10,
-      y: 175
+      y: 200
+    },
+    fontSize: 20
+  });
+  new PointText({
+    content: `Save: press P or p to save`,
+    point: {
+      x: 10,
+      y: 275
     },
     fontSize: 20
   });
@@ -75,7 +90,7 @@ function drawMenu(howMany, spacing) {
 
 function drawStats(stats) {
   new PointText({
-    content: `Time Elapsed: ${stats["secondsElapsed"]} seconds`,
+    content: `Time Elapsed: ${stats.secondsElapsed} seconds`,
     point: {
       x: 10,
       y: view.size.height - 125,
@@ -83,7 +98,7 @@ function drawStats(stats) {
     fontSize: 20
   });
   new PointText({
-    content: `# of objects: ${stats["objects"]}`,
+    content: `# of objects: ${stats.objects}`,
     point: {
       x: 10,
       y: view.size.height - 50,
@@ -95,20 +110,26 @@ function drawStats(stats) {
 function draw(size, howMany, spacing) {
   project.activeLayer.removeChildren();
   drawMenu(howMany, spacing);
-  const stats = drawInteractiveVennDiagram(howMany, size, spacing);
-  drawStats(stats);
+  const output = drawInteractiveVennDiagram(howMany, size, spacing);
+  drawStats(output.stats);
+  return output.group;
 }
 
 window.onload = function () {
   paper.install(window);
   paper.setup('myCanvas');
-  const size = Math.min(200, view.size.height / 3);
+  const size = Math.floor(Math.min(200, view.size.height / 3));
   let howMany = 3;
   let spacing = Math.floor(size / 2);
-  draw(size, howMany, spacing);
+  let group = draw(size, howMany, spacing);
 
   let keysPressed = {};
+  let processes = 0;
   paper.view.onKeyDown = function (event) {
+    if (processes !== 0) {
+      console.log("Busy");
+      return;
+    }
     if (event.key === "enter") {
       let input = prompt("How many circles do you want?", howMany);
       while (true) {
@@ -126,7 +147,7 @@ window.onload = function () {
 
     } else if (event.key === "right") {
       spacing += 1;
-      spacing = Math.min(size - 1, spacing);
+      spacing = Math.min(size, spacing);
 
     } else if (event.key === "down") {
       if (keysPressed[event.key]) return;
@@ -141,12 +162,17 @@ window.onload = function () {
       return;
     }
     keysPressed[event.key] = true;
+    processes += 1;
     setTimeout(() => {
-      draw(size, howMany, spacing)
-    }, 10)
+      group = draw(size, howMany, spacing);
+      processes -= 1;
+    }, 10);
   }
   paper.view.onKeyUp = function (event) {
     keysPressed[event.key] = false;
+    if (event.character.toUpperCase() === "P") {
+      downloadAsSVG("venn_diagram.svg", group);
+    }
   }
 
 }
