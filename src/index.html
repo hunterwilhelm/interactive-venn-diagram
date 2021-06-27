@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Load the Paper.js library -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js"></script>
+    <!-- Load external PaperScript and associate it with myCanvas -->
+    <script type="module" src="js/myScript.js" canvas="myCanvas">
+    </script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        /* Scale canvas with resize attribute to full size */
+        canvas[resize] {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <title></title>
+</head>
+<body>
+<canvas id="myCanvas" resize></canvas>
+</body>
+</html>
